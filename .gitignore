@@ -4,3 +4,5 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .Rproj.user
+.DS_Store
+.vscode/settings.json

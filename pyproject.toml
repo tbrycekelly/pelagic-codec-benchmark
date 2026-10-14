@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pelagic-codec-benchmark"
+version = "0.1.0"
+description = "Reproducible image-codec benchmarks for pelagic imaging"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = { text = "MIT" }
+authors = [{ name = "Pelagic Codec Benchmark contributors" }]
+dependencies = [
+  "imagecodecs>=2026.8",
+  "numpy>=2.0",
+  "opencv-python-headless>=4.10",
+  "pelagia==0.0.1",
+  "pillow>=10.4",
+  "pyarrow>=17",
+  "psutil>=5.9",
+  "rich>=13",
+  "typer>=0.12",
+  "tifffile>=2025.10",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.3"]
+
+[project.scripts]
+pelagic-bench = "pelagic_benchmark.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pelagic_benchmark"]
+
+[tool.uv.sources]
+# The current Pelagia processing package has not been published to PyPI. This
+# pins the required workspace sibling during its transition to a distributable
+# package; Oracle Builder is Pelagia's required sibling source dependency.
+pelagia = { path = "../Pelagia", editable = true }
+oracle-data-contracts = { path = "../oracle-builder/oracle_data_contracts", editable = true }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

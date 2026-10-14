@@ -1,0 +1,24 @@
+schema_version = 1
+
+[dataset]
+path = "/data/pelagic-images"
+
+[segmentation]
+methods = ["fixed", "otsu"]
+fixed_threshold = 118
+minimum_area = 5
+
+[[codecs]]
+name = "png"
+
+[[codecs]]
+name = "jpeg"
+qualities = [100, 95, 90, 85]
+
+[benchmark]
+warmup_runs = 2
+timed_runs = 5
+
+[output]
+directory = "./runs"
+retain_artifacts = false

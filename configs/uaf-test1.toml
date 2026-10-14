@@ -1,0 +1,114 @@
+# UAF test set: 14 uncompressed 2048x2048 grayscale AVI streams.
+# Set frame_selection to "all" to canonicalize and benchmark every sequentially
+# decodable frame. The streams report 1,014 frames but contain 1,013 decodable
+# frames, so sequential decoding is the authoritative source of frame identity.
+schema_version = 1
+
+[dataset]
+type = "video"
+path = "../data/uaf-test1"
+# Invert each condition after preprocessing: raw frames after the identity step,
+# and corrected frames after Pelagia flatfielding. Codecs, thresholds,
+# segmentation, and ROI comparisons use the resulting inverted reference.
+invert_grayscale = true
+#frame_selection = "all"
+frame_selection = "indices"
+frame_indices = [0]
+# To run a deterministic subset instead, use:
+# frame_selection = "indices"
+# frame_indices = [0, 506, 1012]
+
+[segmentation]
+# Fixed threshold follows the study baseline; Otsu is independently estimated
+# per canonical/decoded frame and reports its threshold shift.
+methods = ["fixed", "otsu"]
+fixed_threshold = 100
+minimum_area = 64
+
+# The raw pipeline measures only codec storage and in-memory encode/decode.
+[[preprocessing]]
+id = "original"
+flatfield_enabled = false
+pixel_metrics_enabled = false
+segmentation_enabled = false
+
+# The corrected pipeline uses Pelagia's stored-profile correction. With its
+# explicit one-frame profile window, the profile is the frame's column mean.
+# A future temporal profile pass may change the odd stride/width together.
+[[preprocessing]]
+id = "flatfield_window_column_mean"
+flatfield_enabled = true
+flatfield_axis = 0
+flatfield_window_stride = 1
+flatfield_window_width = 1
+flatfield_min_field_value = 10.0
+pixel_metrics_enabled = true
+segmentation_enabled = true
+
+[[codecs]]
+name = "png"
+deflate_levels = [6]
+
+[[codecs]]
+name = "tiff"
+compressions = ["none", "deflate", "zstd"]
+compression_level = 6
+
+[[codecs]]
+name = "jpeg"
+qualities = [100, 95, 90, 85, 80, 70, 60, 50, 40, 30, 20, 10]
+
+[[codecs]]
+name = "jpeg2000"
+lossless = true
+# OpenJPEG quality-layer levels; exact rate/quality behavior is recorded per treatment.
+lossy_levels = [75, 50, 25]
+
+[[codecs]]
+name = "jpegxl"
+lossless = true
+distances = [0.5, 1.0, 2.0, 3.0]
+effort = 7
+
+[[codecs]]
+name = "webp"
+lossless = true
+qualities = [100, 95, 90, 85, 75, 50]
+method = 4
+
+[[codecs]]
+name = "avif"
+# imagecodecs/libavif quality scale: 0 is lowest and 63 is highest.
+quality_levels = [20, 30, 40, 50, 60]
+speed = 6
+
+[[codecs]]
+name = "jpegls"
+lossless = true
+near_lossless = [1, 3, 5]
+
+[benchmark]
+# Three untimed warm-ups settle encoder allocation and library initialization.
+# Ten measured repetitions provide a useful per-frame timing distribution; use
+# separate immutable benchmark runs only when replicating final comparisons.
+warmup_runs = 3
+timed_runs = 10
+in_memory_enabled = true
+roundtrip_enabled = true
+# This location identifies the filesystem under test. Encoded files exist only
+# for an individual timed read/write observation and are then deleted.
+roundtrip_directory = "../benchmark-scratch/uaf-test1"
+
+[output]
+directory = "../runs"
+retain_artifacts = true
+
+[system_benchmarks]
+enabled = true
+# This identifies the filesystem whose contextual performance is measured.
+directory = "../benchmark-scratch/system-uaf-test1"
+disk_file_sizes_mib = [1, 16, 64, 256]
+# Five repetitions are sufficient context for these intentionally simple system
+# measurements; they are not substituted for codec timing distributions.
+timed_runs = 5
+numpy_matrix_size = 512

@@ -1,0 +1,24 @@
+schema_version = 1
+
+[dataset]
+path = "../tests/fixtures/synthetic"
+
+[segmentation]
+methods = ["fixed", "otsu"]
+fixed_threshold = 118
+minimum_area = 2
+
+[[codecs]]
+name = "png"
+
+[[codecs]]
+name = "jpeg"
+qualities = [95, 75]
+
+[benchmark]
+warmup_runs = 1
+timed_runs = 2
+
+[output]
+directory = "../runs"
+retain_artifacts = false
